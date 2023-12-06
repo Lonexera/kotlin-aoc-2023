@@ -22,6 +22,8 @@ class TestRunner private constructor(
             TestingPart.Part2 -> solution.part2(testInput)
         }
 
+        println("\nCheck:")
+        actualResult.println()
         check(actualResult == expectedResult)
     }
 
