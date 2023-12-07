@@ -87,6 +87,25 @@ object Day05 : Solution {
     }
 
     override fun part2(input: List<String>): Int {
-        return input.size
+        val seeds = input.first().getAllBigIntegers()
+            .chunked(2)
+            .flatMap { (start, rangeLength) ->
+                buildList {
+                    repeat(rangeLength.toInt()) { index ->
+                        add(start + index.toBigInteger())
+                    }
+                }
+            }
+            .also { println(it.size) }
+
+        return input
+            .takeLast(input.size - 2)
+            .getMaps()
+            .run {
+                transform(seeds = seeds, maps = this)
+            }
+            .minOrNull()
+            ?.toInt()
+            ?: 0
     }
 }
