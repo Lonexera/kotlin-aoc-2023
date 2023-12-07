@@ -19,3 +19,46 @@ fun String.md5() = BigInteger(1, MessageDigest.getInstance("MD5").digest(toByteA
  * The cleaner shorthand for printing output.
  */
 fun Any?.println() = println(this)
+
+/**
+ * Gets all numbers in the string and converts them to [Int]
+ */
+fun String.getAllNumbers(): List<Int> =
+    buildList {
+        var currentIndex = 0
+
+        while (currentIndex <= this@getAllNumbers.lastIndex) {
+            currentIndex += when {
+                this@getAllNumbers[currentIndex].isDigit() -> {
+                    val numberStr = this@getAllNumbers.substring(currentIndex).takeWhile { it.isDigit() }
+                    add(numberStr.toInt())
+
+                    numberStr.length
+                }
+                else -> 1
+            }
+        }
+    }
+
+/**
+ * Gets all big numbers in the string and converts them to [BigInteger]
+ */
+fun String.getAllBigIntegers(): List<BigInteger> =
+    buildList {
+        var currentIndex = 0
+
+        while (currentIndex <= this@getAllBigIntegers.lastIndex) {
+
+            currentIndex += when {
+                this@getAllBigIntegers[currentIndex].isDigit() -> {
+                    val numberStr = this@getAllBigIntegers.substring(currentIndex).takeWhile { it.isDigit() }
+                    add(BigInteger(numberStr))
+
+                    numberStr.length
+                }
+                else -> {
+                    1
+                }
+            }
+        }
+    }
