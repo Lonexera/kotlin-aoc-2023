@@ -62,3 +62,26 @@ fun String.getAllBigIntegers(): List<BigInteger> =
             }
         }
     }
+
+/**
+ * Gets all big numbers in the string and converts them to [Long]
+ */
+fun String.getAllLongs(): List<Long> =
+    buildList {
+        var currentIndex = 0
+
+        while (currentIndex <= this@getAllLongs.lastIndex) {
+
+            currentIndex += when {
+                this@getAllLongs[currentIndex].isDigit() -> {
+                    val numberStr = this@getAllLongs.substring(currentIndex).takeWhile { it.isDigit() }
+                    add(numberStr.toLong())
+
+                    numberStr.length
+                }
+                else -> {
+                    1
+                }
+            }
+        }
+    }

@@ -1,8 +1,8 @@
 package solution
 
 import TestRunner
-import getAllBigIntegers
-import java.math.BigInteger
+import getAllLongs
+import kotlinx.coroutines.*
 
 fun main() {
     TestRunner
@@ -13,8 +13,8 @@ fun main() {
         .run {
             check(
                 fileName = "Day05_test",
-                part = TestRunner.TestingPart.Part1,
-                expectedResult = 35
+                part = TestRunner.TestingPart.Part2,
+                expectedResult = 46
             )
 
             solve()
@@ -23,11 +23,9 @@ fun main() {
 
 object Day05 : Solution {
 
-    private val bigOne = BigInteger.ONE
-
     private val String.hasDigits: Boolean get() = any { it.isDigit() }
 
-    private fun List<String>.getMaps(): List<Map<ClosedRange<BigInteger>, ClosedRange<BigInteger>>> {
+    private fun List<String>.getMaps(): List<Map<LongRange, LongRange>> {
         var currentIndex = 0
         val linesSize = size
 
@@ -40,10 +38,10 @@ object Day05 : Solution {
                         val map = this@getMaps.subList(currentIndex, linesSize)
                             .takeWhile { it.hasDigits }
                             .associate { line ->
-                                val (destinationStart, sourceStart, rangeLength) = line.getAllBigIntegers()
+                                val (destinationStart, sourceStart, rangeLength) = line.getAllLongs()
 
-                                sourceStart..(sourceStart + rangeLength - bigOne) to
-                                    destinationStart..(destinationStart + rangeLength - bigOne)
+                                sourceStart..<sourceStart + rangeLength to
+                                        destinationStart..<destinationStart + rangeLength
                             }
                         add(map)
 
@@ -56,53 +54,66 @@ object Day05 : Solution {
         }
     }
 
-    private fun transform(
-        seeds: List<BigInteger>,
-        maps: List<Map<ClosedRange<BigInteger>, ClosedRange<BigInteger>>>
-    ): List<BigInteger> {
-        return maps.fold(seeds) { accumulatorSeeds, map ->
+    private suspend fun transform(
+        seeds: List<Long>,
+        maps: List<Map<LongRange, LongRange>>
+    ): List<Long> = coroutineScope {
+        maps.fold(seeds) { accumulatorSeeds, map ->
             accumulatorSeeds.map { seed ->
-                map.entries.find { (sourceRange, _) -> seed in sourceRange }
-                    ?.let { (sourceRange, destinationRange) ->
-                        val sourceIndex = seed - sourceRange.start
-                        destinationRange.start + sourceIndex
-                    }
-                    ?: seed
+                async {
+                    map.entries.find { (sourceRange, _) -> seed in sourceRange }
+                        ?.let { (sourceRange, destinationRange) ->
+                            val sourceIndex = seed - sourceRange.first
+                            destinationRange.first + sourceIndex
+                        }
+                            ?: seed
+                }
             }
+                .awaitAll()
         }
     }
 
     override fun part1(input: List<String>): Int {
-        val seeds = input.first().getAllBigIntegers()
+        val seeds = input.first().getAllLongs()
 
         return input
             .takeLast(input.size - 2)
             .getMaps()
             .run {
-                transform(seeds = seeds, maps = this)
+                runBlocking { transform(seeds = seeds, maps = this@run) }
             }
             .minOrNull()
             ?.toInt()
             ?: 0
     }
 
-    override fun part2(input: List<String>): Int {
-        val seeds = input.first().getAllBigIntegers()
-            .chunked(2)
-            .flatMap { (start, rangeLength) ->
-                buildList {
-                    repeat(rangeLength.toInt()) { index ->
-                        add(start + index.toBigInteger())
-                    }
-                }
+    private suspend fun transformRanges(
+        seedRanges: List<LongRange>,
+        maps: List<Map<LongRange, LongRange>>
+    ): List<Long> = coroutineScope {
+        seedRanges.map { seeds ->
+            async {
+                transform(
+                    seeds = seeds.toList(),
+                    maps = maps
+                )
+                    .asSequence()
+                    .min()
             }
-            .also { println(it.size) }
+        }
+            .awaitAll()
+    }
+
+    override fun part2(input: List<String>): Int {
+        val seedRanges = input.first().getAllLongs()
+            .chunked(2)
+            .map { (start, length) -> start..<start + length }
 
         return input
             .takeLast(input.size - 2)
             .getMaps()
             .run {
-                transform(seeds = seeds, maps = this)
+                runBlocking(Dispatchers.Default) { transformRanges(seedRanges = seedRanges, maps = this@run) }
             }
             .minOrNull()
             ?.toInt()
