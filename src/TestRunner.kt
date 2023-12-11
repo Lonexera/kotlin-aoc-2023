@@ -1,4 +1,5 @@
 import solution.Solution
+import kotlin.system.measureTimeMillis
 
 class TestRunner private constructor(
     private val testFileName: String,
@@ -31,9 +32,15 @@ class TestRunner private constructor(
         val input = readInput(testFileName)
 
         println("\nPart 1:")
-        solution.part1(input).println()
+        val part1Time = measureTimeMillis {
+            solution.part1(input).println()
+        }
+        println("(time: ${part1Time}ms)")
         println("\nPart 2:")
-        solution.part2(input).println()
+        val part2Time = measureTimeMillis {
+            solution.part2(input).println()
+        }
+        println("(time: ${part2Time}ms)")
     }
 
     companion object {
