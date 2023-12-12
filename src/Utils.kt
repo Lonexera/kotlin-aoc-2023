@@ -41,6 +41,33 @@ fun String.getAllNumbers(): List<Int> =
     }
 
 /**
+ * Gets all numbers in the string and converts them to [Int]
+ */
+fun String.getAllSignedNumbers(): List<Int> =
+    buildList {
+        var currentIndex = 0
+
+        while (currentIndex <= this@getAllSignedNumbers.lastIndex) {
+            currentIndex += when {
+                this@getAllSignedNumbers[currentIndex].isDigit() -> {
+                    val numberStr = this@getAllSignedNumbers.substring(currentIndex).takeWhile { it.isDigit() }
+                    val minusStr = this@getAllSignedNumbers.getOrNull(currentIndex - 1)?.takeIf { it == '-' }
+                    add(
+                        if (minusStr != null) {
+                            numberStr.toInt().unaryMinus()
+                        } else {
+                            numberStr.toInt()
+                        }
+                     )
+
+                    numberStr.length
+                }
+                else -> 1
+            }
+        }
+    }
+
+/**
  * Gets all big numbers in the string and converts them to [BigInteger]
  */
 fun String.getAllBigIntegers(): List<BigInteger> =
